@@ -48,42 +48,27 @@ var kecCuaca = [];
 function postTweetBmkg() {
   async function getWeather(province) {
     var prov = province.replace(" ", "").replace(" ", "");
-
     var url = `https://data.bmkg.go.id/DataMKG/MEWS/DigitalForecast/DigitalForecast-${prov}.xml`;
-
-    Logger.log(url);
-
     var response = UrlFetchApp.fetch(url);
     var data = response.getContentText();
-    // Logger.log(data);
 
     let document = XmlService.parse(data);
     let root = document.getRootElement();
 
     let forecast = root.getChild("forecast");
-    // Logger.log(forecast)
     let areas = forecast.getChildren("area");
-    // Logger.log(areas.toString())
-    // console.log(areas.length);
     areas.forEach((area) => {
-      // console.log(area)
       let domain = area.getAttribute("domain").getValue();
       let kecamatan = area.getAttribute("description").getValue();
-      // console.log(domain);
       if (domain == province) {
         let parameters = area.getChildren("parameter");
-        // console.log(parameters.length);
         parameters.forEach((parameter) => {
           var description = parameter.getAttribute("description").getValue();
           if (description == "Weather") {
-            // console.log(description);
             var timerages = parameter.getChildren("timerange");
-            // console.log(timerages.length);
             timerages.forEach((timerange) => {
-              // console.log(`Provinsi ${domain}, Kecamatan ${kecamatan}`);
               var value = `c${parseInt(timerange.getValue())}`;
               let h = timerange.getAttribute("h").getValue();
-              // console.log(h)
               let date = new Date();
               var jakartaDate = Utilities.formatDate(
                 date,
@@ -99,14 +84,12 @@ function postTweetBmkg() {
                   cuaca: cuaca[value] ?? "Cerah",
                 });
               }
-              // console.log(cuaca[value]);
             });
           }
         });
         return;
       }
     });
-    // console.log(kecCuaca);
     var textToPostKecCuaca = "";
     var kab = "";
 
@@ -119,14 +102,12 @@ function postTweetBmkg() {
 
     if (kecCuaca.length) {
       var textToPost = `PRAKIRAAN CUACA\n---------------------------\n${rand.kecamatan}, ${kab} ${rand.cuaca}`;
-      console.log(textToPost);
       if (!service.hasAccess()) {
         console.log("Authentication Failed");
       } else {
         var status = textToPost + "\n\n𝒷𝓎 " + "BMKG Indonesia";
         try {
           var response = service.sendTweet(status, params);
-          console.log("twitter status id: ", response.id_str);
         } catch (e) {
           console.log(e);
         }
